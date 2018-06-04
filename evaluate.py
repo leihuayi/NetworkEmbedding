@@ -9,6 +9,12 @@ from sklearn.linear_model import LogisticRegression
 from scipy.io import loadmat
 from sklearn.preprocessing import MultiLabelBinarizer
 
+
+#-----------------------------------------------------------------------------------------------#
+#                                                                                               #
+#   Create dictionary (graph) our of sparse matrix                                              #
+#                                                                                               #
+#-----------------------------------------------------------------------------------------------# 
 def sparse2graph(x):
     G = defaultdict(lambda: set())
     cx = x.tocoo()
@@ -16,6 +22,12 @@ def sparse2graph(x):
         G[i].add(j)
     return {str(k): [str(x) for x in v] for k,v in iteritems(G)}
 
+
+#-----------------------------------------------------------------------------------------------#
+#                                                                                               #
+#   HELPER FUNCTIONS FOR SPLITTING DATA TRAIN, VALIDATION, TEST                                 #
+#                                                                                               #
+#-----------------------------------------------------------------------------------------------# 
 def get_splits():
     idx_train = range(200)
     idx_val = range(200, 500)
@@ -31,6 +43,13 @@ def format_csr(y_):
   return y
 
 
+
+#-----------------------------------------------------------------------------------------------#
+#                                                                                               #
+#   EVALUATE                                                                                    #
+#   Perform Logistic Regression of embedding                                                    #
+#                                                                                               #
+#-----------------------------------------------------------------------------------------------# 
 def main():
   parser = ArgumentParser("evaluate",formatter_class=ArgumentDefaultsHelpFormatter,conflict_handler='resolve')
   parser.add_argument("--emb", required=True)
@@ -85,5 +104,12 @@ def main():
   print ('Score :   ', score)
   print ('-------------------')
 
+
+
+#-----------------------------------------------------------------------------------------------#
+#                                                                                               #
+#   Start                                                                                       #
+#                                                                                               #
+#-----------------------------------------------------------------------------------------------# 
 if __name__ == "__main__":
   sys.exit(main())
