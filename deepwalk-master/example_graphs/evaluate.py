@@ -22,6 +22,15 @@ def get_splits():
     idx_test = range(500, 1500)
     return idx_train, idx_val, idx_test
 
+def format_csr(y_):
+  y = [[] for x in range(y_.shape[0])]
+
+  cy =  y_.tocoo()
+  for i, j in zip(cy.row, cy.col):
+      y[i].append(j)
+  return y
+
+
 def main():
   parser = ArgumentParser("scoring",
                           formatter_class=ArgumentDefaultsHelpFormatter,
@@ -39,14 +48,14 @@ def main():
                       'By default, only training percents of 10, 50 and 90 are used.')
 
   args = parser.parse_args()
-  # 0. Files
+
+
+  ## Load Embeddings
   embeddings_file = args.emb
   matfile = args.network
-  
-  # 1. Load Embeddings
   model = KeyedVectors.load_word2vec_format(embeddings_file, binary=False)
   
-  # 2. Load labels
+  ## Load labels
   mat = loadmat(matfile)
   A = mat[args.adj_matrix_name]
   graph = sparse2graph(A)
@@ -57,7 +66,7 @@ def main():
   # Map nodes to their features (note:  assumes nodes are labeled as integers 1:N)
   features_matrix = numpy.asarray([model[str(node)] for node in range(len(graph))])
 
-  # 2. to score each train/test group
+  ## Split in training, validation, test set
   X, y = features_matrix, labels_matrix
 
   idx_train, idx_val, idx_test = get_splits()
@@ -68,33 +77,23 @@ def main():
   X_test = X[idx_test]
 
 
-  y_train = [[] for x in range(y_train_.shape[0])]
-
-  cy =  y_train_.tocoo()
-  for i, j in zip(cy.row, cy.col):
-      y_train[i].append(j)
-
-  assert sum(len(l) for l in y_train) == y_train_.nnz
+  y_train = format_csr(y_train_)
+  y_test = format_csr(y_test_)
 
 
-  y_test = [[] for _ in range(y_test_.shape[0])]
+  ## Logistic Regression
 
-  cy =  y_test_.tocoo()
-  for i, j in zip(cy.row, cy.col):
-      y_test[i].append(j)
-
+  # Train on data
   logisticRegr = LogisticRegression()
   logisticRegr.fit(X_train, y_train)
 
   # Measure accuracy
   score = logisticRegr.score(X_test, y_test)
 
-
+  # Output results
   print ('Results, using embeddings of dimensionality', X.shape[1])
   print ('-------------------')
-
   print ('Score :   ', score)
-
   print ('-------------------')
 
 if __name__ == "__main__":
