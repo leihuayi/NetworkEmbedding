@@ -50,9 +50,10 @@ def get_splits(y):
 if __name__ == '__main__':
     # usage
     X, A, y = load_data(dataset='cora')
-    y_train, y_val, y_test, idx_train, idx_val, idx_test = get_splits(y)
+    #y_train, y_val, y_test, idx_train, idx_val, idx_test = get_splits(y,X)
     dictMat = {}
     dictMat['network'] = A
     dictMat['group'] = sp.csr_matrix(y)
+
     io.savemat("cora/cora", dictMat, appendmat=True)
 

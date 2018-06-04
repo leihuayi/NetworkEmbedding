@@ -9,7 +9,6 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score
 from scipy.io import loadmat
-from sklearn.utils import shuffle as skshuffle
 from sklearn.preprocessing import MultiLabelBinarizer
 
 class TopKRanker(OneVsRestClassifier):
@@ -29,6 +28,12 @@ def sparse2graph(x):
     for i,j,v in zip(cx.row, cx.col, cx.data):
         G[i].add(j)
     return {str(k): [str(x) for x in v] for k,v in iteritems(G)}
+
+def get_splits():
+    idx_train = range(200)
+    idx_val = range(200, 500)
+    idx_test = range(500, 1500)
+    return idx_train, idx_val, idx_test
 
 def main():
   parser = ArgumentParser("scoring",
@@ -56,7 +61,6 @@ def main():
   
   # 2. Load labels
   mat = loadmat(matfile)
-  print(mat)
   A = mat[args.adj_matrix_name]
   graph = sparse2graph(A)
   labels_matrix = mat[args.label_matrix_name]
@@ -65,75 +69,52 @@ def main():
   
   # Map nodes to their features (note:  assumes nodes are labeled as integers 1:N)
   features_matrix = numpy.asarray([model[str(node)] for node in range(len(graph))])
-  
-  # 2. Shuffle, to create train/test groups
-  shuffles = []
-  for x in range(args.num_shuffles):
-    shuffles.append(skshuffle(features_matrix, labels_matrix))
-  
-  # 3. to score each train/test group
-  all_results = defaultdict(list)
-  
-  if args.all:
-    training_percents = numpy.asarray(range(1, 10)) * .1
-  else:
-    training_percents = [0.1, 0.5, 0.9]
-  for train_percent in training_percents:
-    for shuf in shuffles:
-  
-      X, y = shuf
-  
-      training_size = int(train_percent * X.shape[0])
-  
-      X_train = X[:training_size, :]
-      y_train_ = y[:training_size]
-  
-      y_train = [[] for x in range(y_train_.shape[0])]
-  
-  
-      cy =  y_train_.tocoo()
-      for i, j in zip(cy.row, cy.col):
-          y_train[i].append(j)
-  
-      assert sum(len(l) for l in y_train) == y_train_.nnz
-  
-      X_test = X[training_size:, :]
-      y_test_ = y[training_size:]
-  
-      y_test = [[] for _ in range(y_test_.shape[0])]
-  
-      cy =  y_test_.tocoo()
-      for i, j in zip(cy.row, cy.col):
-          y_test[i].append(j)
-  
-      clf = TopKRanker(LogisticRegression())
-      clf.fit(X_train, y_train_)
-  
-      # find out how many labels should be predicted
-      top_k_list = [len(l) for l in y_test]
-      preds = clf.predict(X_test, top_k_list)
-  
-      results = {}
-      averages = ["micro", "macro"]
-      for average in averages:
-          results[average] = f1_score(mlb.fit_transform(y_test), mlb.fit_transform(preds), average=average)
-  
-      all_results[train_percent].append(results)
-  
+
+  # 2. to score each train/test group
+  X, y = features_matrix, labels_matrix
+
+  idx_train, idx_val, idx_test = get_splits()
+  y_train_ = y[idx_train]
+  y_val_ = y[idx_val]
+  y_test_ = y[idx_test]
+  X_train = X[idx_train]
+  X_test = X[idx_test]
+
+
+  y_train = [[] for x in range(y_train_.shape[0])]
+
+  cy =  y_train_.tocoo()
+  for i, j in zip(cy.row, cy.col):
+      y_train[i].append(j)
+
+  assert sum(len(l) for l in y_train) == y_train_.nnz
+
+
+  y_test = [[] for _ in range(y_test_.shape[0])]
+
+  cy =  y_test_.tocoo()
+  for i, j in zip(cy.row, cy.col):
+      y_test[i].append(j)
+
+  clf = TopKRanker(LogisticRegression())
+  clf.fit(X_train, y_train_)
+
+  # find out how many labels should be predicted
+  top_k_list = [len(l) for l in y_test]
+  preds = clf.predict(X_test, top_k_list)
+
+  results = {}
+  averages = ["micro", "macro"]
+  for average in averages:
+      results[average] = f1_score(mlb.fit_transform(y_test), mlb.fit_transform(preds), average=average)
+
+
   print ('Results, using embeddings of dimensionality', X.shape[1])
   print ('-------------------')
-  for train_percent in sorted(all_results.keys()):
-    print ('Train percent:', train_percent)
-    for index, result in enumerate(all_results[train_percent]):
-      print ('Shuffle #%d:   ' % (index + 1), result)
-    avg_score = defaultdict(float)
-    for score_dict in all_results[train_percent]:
-      for metric, score in iteritems(score_dict):
-        avg_score[metric] += score
-    for metric in avg_score:
-      avg_score[metric] /= len(all_results[train_percent])
-    print ('Average score:', dict(avg_score))
-    print ('-------------------')
+
+  print ('Score :   ', results)
+
+  print ('-------------------')
 
 if __name__ == "__main__":
   sys.exit(main())
