@@ -5,22 +5,9 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from collections import defaultdict
 from gensim.models import Word2Vec, KeyedVectors
 from six import iteritems
-from sklearn.multiclass import OneVsRestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import f1_score
 from scipy.io import loadmat
 from sklearn.preprocessing import MultiLabelBinarizer
-
-class TopKRanker(OneVsRestClassifier):
-    def predict(self, X, top_k_list):
-        assert X.shape[0] == len(top_k_list)
-        probs = numpy.asarray(super(TopKRanker, self).predict_proba(X))
-        all_labels = []
-        for i, k in enumerate(top_k_list):
-            probs_ = probs[i, :]
-            labels = self.classes_[probs_.argsort()[-k:]].tolist()
-            all_labels.append(labels)
-        return all_labels
 
 def sparse2graph(x):
     G = defaultdict(lambda: set())
@@ -96,23 +83,17 @@ def main():
   for i, j in zip(cy.row, cy.col):
       y_test[i].append(j)
 
-  clf = TopKRanker(LogisticRegression())
-  clf.fit(X_train, y_train_)
+  logisticRegr = LogisticRegression()
+  logisticRegr.fit(X_train, y_train)
 
-  # find out how many labels should be predicted
-  top_k_list = [len(l) for l in y_test]
-  preds = clf.predict(X_test, top_k_list)
-
-  results = {}
-  averages = ["micro", "macro"]
-  for average in averages:
-      results[average] = f1_score(mlb.fit_transform(y_test), mlb.fit_transform(preds), average=average)
+  # Measure accuracy
+  score = logisticRegr.score(X_test, y_test)
 
 
   print ('Results, using embeddings of dimensionality', X.shape[1])
   print ('-------------------')
 
-  print ('Score :   ', results)
+  print ('Score :   ', score)
 
   print ('-------------------')
 

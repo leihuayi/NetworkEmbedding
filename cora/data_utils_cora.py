@@ -56,4 +56,3 @@ if __name__ == '__main__':
     dictMat['group'] = sp.csr_matrix(y)
 
     io.savemat("cora/cora", dictMat, appendmat=True)
-
