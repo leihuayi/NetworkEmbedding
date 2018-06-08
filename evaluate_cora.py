@@ -1,3 +1,9 @@
+#-----------------------------------------------------------------------------------------------#
+#                                                                                               #
+#   I M P O R T     L I B R A R I E S                                                           #
+#                                                                                               #
+#-----------------------------------------------------------------------------------------------# 
+
 import numpy
 import sys
 
@@ -7,7 +13,6 @@ from gensim.models import Word2Vec, KeyedVectors
 from six import iteritems
 from sklearn.linear_model import LogisticRegression
 from scipy.io import loadmat
-from sklearn.preprocessing import MultiLabelBinarizer
 
 
 #-----------------------------------------------------------------------------------------------#
@@ -55,7 +60,7 @@ def main():
   parser.add_argument("--emb", required=True)
   parser.add_argument("--network", required=True)
   parser.add_argument('--dic-network-name', default='network')
-  parser.add_argument('--dic-label-name', default='group')
+  parser.add_argument('--dic-label-name', default='label')
 
   args = parser.parse_args()
 
@@ -71,7 +76,6 @@ def main():
   graph = sparse2graph(A)
   labels_matrix = mat[args.dic_label_name]
   labels_count = labels_matrix.shape[1]
-  mlb = MultiLabelBinarizer(range(labels_count))
   
   # Map nodes to their features (note:  assumes nodes are labeled as integers 1:N)
   features_matrix = numpy.asarray([model[str(node)] for node in range(len(graph))])

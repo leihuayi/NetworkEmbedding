@@ -1,3 +1,8 @@
+#-----------------------------------------------------------------------------------------------#
+#                                                                                               #
+#   I M P O R T     L I B R A R I E S                                                           #
+#                                                                                               #
+#-----------------------------------------------------------------------------------------------# 
 import scipy.sparse as sp
 import scipy.io as io
 import numpy as np
@@ -53,6 +58,7 @@ if __name__ == '__main__':
     #y_train, y_val, y_test, idx_train, idx_val, idx_test = get_splits(y,X)
     dictMat = {}
     dictMat['network'] = A
-    dictMat['group'] = sp.csr_matrix(y)
+    dictMat['label'] = sp.csr_matrix(y)
+    print(dictMat['label'])
 
     io.savemat("cora/cora", dictMat, appendmat=True)
