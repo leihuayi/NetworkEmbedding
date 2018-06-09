@@ -58,7 +58,7 @@ def format_csr(y_):
 def main():
   parser = ArgumentParser("evaluate",formatter_class=ArgumentDefaultsHelpFormatter,conflict_handler='resolve')
   parser.add_argument("--emb", required=True)
-  parser.add_argument("--network", required=True)
+  parser.add_argument("--net", required=True)
   parser.add_argument('--dic-network-name', default='network')
   parser.add_argument('--dic-label-name', default='label')
 
@@ -67,11 +67,10 @@ def main():
 
   ## Load Embeddings
   embeddings_file = args.emb
-  matfile = args.network
   model = KeyedVectors.load_word2vec_format(embeddings_file, binary=False)
   
   ## Load labels
-  mat = loadmat(matfile)
+  mat = loadmat(args.net)
   A = mat[args.dic_network_name]
   graph = sparse2graph(A)
   labels_matrix = mat[args.dic_label_name]
@@ -103,7 +102,6 @@ def main():
   score = logisticRegr.score(X_test, y_test)
 
   # Output results
-  print ('Results, using embeddings of dimensionality', X.shape[1])
   print ('-------------------')
   print ('Score :   ', score)
   print ('-------------------')

@@ -7,42 +7,13 @@
 import numpy as np
 import sys
 import scipy.sparse as sp
+import pickle
+import networkx as nx
 
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+import argparse
 from collections import defaultdict
-from gensim.models import Word2Vec, KeyedVectors
 from six import iteritems
-from sklearn.linear_model import LogisticRegression
-from scipy.io import loadmat
-
-
-#-----------------------------------------------------------------------------------------------#
-#                                                                                               #
-#   Create dictionary (graph) our of sparse matrix                                              #
-#                                                                                               #
-#-----------------------------------------------------------------------------------------------# 
-def sparse2graph(x):
-    G = defaultdict(lambda: set())
-    cx = x.tocoo()
-    for i,j,v in zip(cx.row, cx.col, cx.data):
-        G[i].add(j)
-    return {str(k): [str(x) for x in v] for k,v in iteritems(G)}
-
-
-#-----------------------------------------------------------------------------------------------#
-#                                                                                               #
-#   HELPER FUNCTIONS FOR SPLITTING DATA TRAIN, VALIDATION, TEST                                 #
-#                                                                                               #
-#-----------------------------------------------------------------------------------------------# 
-def format_csr(y_):
-  y = [[] for x in range(y_.shape[0])]
-
-  cy =  y_.tocoo()
-  for i, j in zip(cy.row, cy.col):
-      y[i].append(j)
-  return y
-
-
+from sklearn.metrics import roc_auc_score, average_precision_score, roc_curve
 
 #-----------------------------------------------------------------------------------------------#
 #                                                                                               #
@@ -51,48 +22,64 @@ def format_csr(y_):
 #                                                                                               #
 #-----------------------------------------------------------------------------------------------# 
 def main():
-  parser = ArgumentParser("evaluate",formatter_class=ArgumentDefaultsHelpFormatter,conflict_handler='resolve')
+  parser = argparse.ArgumentParser()
   parser.add_argument("--emb", required=True)
-  parser.add_argument("--network", required=True)
+  parser.add_argument("--net", required=True)
+  parser.add_argument("--testdir", required=True)
   parser.add_argument('--dic-network-name', default='network')
   parser.add_argument('--dic-label-name', default='label')
 
   args = parser.parse_args()
 
 
+  ## Load graph
+  G=sp.load_npz(args.net)
+  graph = nx.from_scipy_sparse_matrix(G)
+
   ## Load Embeddings
-  embeddings_file = args.emb
-  #matfile = args.network
-  #model = KeyedVectors.load_word2vec_format(embeddings_file, binary=False)
+  emb_mappings = pickle.load(open(args.emb, 'rb'))
+  emb_list = []
+  for node_index in emb_mappings.keys():
+      node_emb = emb_mappings[node_index]
+      emb_list.append(node_emb)
+  emb_matrix = np.vstack(emb_list)
   
-  ## Load labels
-  #mat = loadmat(matfile)
-  #A = mat[args.dic_network_name]
-  #graph = sparse2graph(A)
-
-  ## Labels train
-  edges_train = np.load("tencent/train_edges.npy")
-  row = np.array(edges_train[:,0])
-  col = np.array(edges_train[:,1])
-  size = np.amax([np.amax(row), np.amax(col)])+1 # TODO : CALCULATE WITH GRAPH
-  data = np.ones(edges_train.shape[0])
-
-  y_train = sp.csr_matrix((data, (row, col)), shape=(size, size))
-  print(y)
-
-  ## Labels test
-  edges_test = np.load("tencent/test_edges.npy")
-  row = np.array(edges_test[:,0])
-  col = np.array(edges_test[:,1])
-  size = np.amax([np.amax(row), np.amax(col)])+1 # TODO : CALCULATE WITH GRAPH
-  data = np.ones(edges_test.shape[0])
-
-  y_test = sp.csr_matrix((data, (row, col)), shape=(size, size))
+  print(emb_matrix.shape)
   
-  # Map nodes to their features (note:  assumes nodes are labeled as integers 1:N)
-  #features_matrix = numpy.asarray([model[str(node)] for node in range(len(graph))])
 
-  ## Split in training, validation, test set
+  # Load test edges
+  edges_pos = np.load(args.testdir+"/test_edges.npy")
+  edges_neg = np.load(args.testdir+"/test_edges_false.npy")
+
+  ## Compute ROC score
+  # Edge case
+  if len(edges_pos) == 0 or len(edges_neg) == 0:
+      return (None, None, None)
+
+  # Store positive edge predictions, actual values
+  preds_pos = []
+  pos = []
+  for edge in edges_pos:
+      preds_pos.append(np.dot(emb_matrix[edge[0],:],emb_matrix[edge[1],:])) # Inner product for node similarity
+      pos.append(1) # actual value (1 for positive)
+      
+  # Store negative edge predictions, actual values
+  preds_neg = []
+  neg = []
+  for edge in edges_neg:
+      preds_neg.append(np.dot(emb_matrix[edge[0],:],emb_matrix[edge[1],:])) # Inner product for node similarity
+      neg.append(0) # actual value (0 for negative)
+      
+  # Calculate scores
+  preds_all = np.hstack([preds_pos, preds_neg])
+  labels_all = np.hstack([np.ones(len(preds_pos)), np.zeros(len(preds_neg))])
+  roc_score = roc_auc_score(labels_all, preds_all)
+  
+  # return roc_score, roc_curve_tuple, ap_score
+  print ('-------------------')
+  print ('AUC ROC Score :   ', roc_score)
+  print ('-------------------')
+
 
 
 #-----------------------------------------------------------------------------------------------#
