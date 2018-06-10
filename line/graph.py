@@ -5,11 +5,13 @@
 #-----------------------------------------------------------------------------------------------# 
 import networkx as nx
 import numpy as np
+import scipy.sparse as sp
 
 
 class Graph:
     def __init__(self, graph_file):
-        self.g = nx.read_gpickle(graph_file)
+        g_npz = sp.load_npz(graph_file)
+        self.g = nx.from_scipy_sparse_matrix(g_npz)
         self.num_of_nodes = self.g.number_of_nodes()
         self.num_of_edges = self.g.number_of_edges()
         self.edges_raw = self.g.edges(data=True)

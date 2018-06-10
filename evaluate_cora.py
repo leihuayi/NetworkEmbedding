@@ -4,10 +4,11 @@
 #                                                                                               #
 #-----------------------------------------------------------------------------------------------# 
 
-import numpy
+import numpy as np
 import sys
-
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+import scipy.sparse as sp
+import networkx as nx
+import argparse
 from collections import defaultdict
 from gensim.models import Word2Vec, KeyedVectors
 from six import iteritems
@@ -56,9 +57,10 @@ def format_csr(y_):
 #                                                                                               #
 #-----------------------------------------------------------------------------------------------# 
 def main():
-  parser = ArgumentParser("evaluate",formatter_class=ArgumentDefaultsHelpFormatter,conflict_handler='resolve')
+  parser = argparse.ArgumentParser()
   parser.add_argument("--emb", required=True)
   parser.add_argument("--net", required=True)
+  parser.add_argument("--labels", required=True)
   parser.add_argument('--dic-network-name', default='network')
   parser.add_argument('--dic-label-name', default='label')
 
@@ -70,14 +72,14 @@ def main():
   model = KeyedVectors.load_word2vec_format(embeddings_file, binary=False)
   
   ## Load labels
-  mat = loadmat(args.net)
-  A = mat[args.dic_network_name]
-  graph = sparse2graph(A)
-  labels_matrix = mat[args.dic_label_name]
+  g_npz = sp.load_npz(args.net)
+  graph = nx.from_scipy_sparse_matrix(g_npz)
+  labels_matrix = sp.load_npz(args.labels)
+  
   labels_count = labels_matrix.shape[1]
   
   # Map nodes to their features (note:  assumes nodes are labeled as integers 1:N)
-  features_matrix = numpy.asarray([model[str(node)] for node in range(len(graph))])
+  features_matrix = np.asarray([model[str(node)] for node in range(len(graph))])
 
   ## Split in training, validation, test set
   X, y = features_matrix, labels_matrix

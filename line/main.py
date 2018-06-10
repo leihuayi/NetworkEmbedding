@@ -6,7 +6,7 @@
 import tensorflow as tf
 import numpy as np
 import argparse
-import model
+from model import Line
 from graph import Graph
 import pickle
 import time
@@ -18,13 +18,11 @@ import time
 #                                                                                               #
 #-----------------------------------------------------------------------------------------------#
 def line(args):
-    graph = Graph(graph_file=args.graph_file)
-    suffix = args.proximity
+    graph = Graph(graph_file=args.input)
     args.num_of_nodes = graph.num_of_nodes
-    model = model.Line(args)
+    model = Line(args)
     with tf.Session() as sess:
         print(args)
-        print('batches\tloss\tsampling time\ttraining_time\tdatetime')
         tf.global_variables_initializer().run()
         initial_embedding = sess.run(model.embedding)
         learning_rate = args.learning_rate
@@ -44,12 +42,13 @@ def line(args):
                     learning_rate = args.learning_rate * 0.0001
             else:
                 loss = sess.run(model.loss, feed_dict=feed_dict)
-                print('%d\t%f\t%0.2f\t%0.2f\t%s' % (b, loss, sampling_time, training_time,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+                print('batches : %d\t loss : %f\t sampling_time : %0.2f\t training_time : %0.2f\t datetime : %s' % 
+                    (b, loss, sampling_time, training_time,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
                 sampling_time, training_time = 0, 0
             if b % 1000 == 0 or b == (args.num_batches - 1):
                 embedding = sess.run(model.embedding)
                 normalized_embedding = embedding / np.linalg.norm(embedding, axis=1, keepdims=True)
-                pickle.dump(graph.embedding_mapping(normalized_embedding), open(args.output+'_%s.pkl' % suffix, 'wb'))
+                pickle.dump(graph.embedding_mapping(normalized_embedding), open(args.output, 'wb'))
 
 
 #-----------------------------------------------------------------------------------------------#
@@ -67,8 +66,7 @@ def main():
     parser.add_argument('--K', default=5)
     parser.add_argument('--proximity', default='second-order', help='first-order or second-order')
     parser.add_argument('--learning_rate', default=0.025)
-    parser.add_argument('--num_batches', default=1000)
-    parser.add_argument('--total_graph', default=True)
+    parser.add_argument('--num_batches', default=200)
 
     args = parser.parse_args()
     line(args)

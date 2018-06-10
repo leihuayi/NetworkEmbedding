@@ -11,9 +11,7 @@ import pickle
 import networkx as nx
 
 import argparse
-from collections import defaultdict
-from six import iteritems
-from sklearn.metrics import roc_auc_score, average_precision_score, roc_curve
+from sklearn.metrics import roc_auc_score
 
 #-----------------------------------------------------------------------------------------------#
 #                                                                                               #
