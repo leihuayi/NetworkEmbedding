@@ -7,8 +7,8 @@ import tensorflow as tf
 
 #-----------------------------------------------------------------------------------------------#
 #                                                                                               #
-#   LINE MODEL                                                                                   #
-#   A subclass to allow more customization of the Word2Vec internals                            #
+#   LINE MODEL                                                                                  #
+#   A subclass implementing LINE algorithm                                                      #
 #                                                                                               #
 #-----------------------------------------------------------------------------------------------# 
 class Line:
@@ -17,7 +17,7 @@ class Line:
         self.u_j = tf.placeholder(name='u_j', dtype=tf.int32, shape=[args.batch_size * (args.K + 1)])
 
         self.label = tf.placeholder(name='label', dtype=tf.float32, shape=[args.batch_size * (args.K + 1)])
-        self.embedding = tf.get_variable('target_embedding', [args.num_of_nodes, args.embedding_dim],initializer=tf.random_uniform_initializer(minval=-1., maxval=1.))
+        self.embedding = tf.get_variable('target_embedding', [args.num_of_nodes, args.dimension],initializer=tf.random_uniform_initializer(minval=-1., maxval=1.))
         self.u_i_embedding = tf.matmul(tf.one_hot(self.u_i, depth=args.num_of_nodes), self.embedding)
 
         # First order priority
@@ -25,7 +25,7 @@ class Line:
             self.u_j_embedding = tf.matmul(tf.one_hot(self.u_j, depth=args.num_of_nodes), self.embedding)
         # Second order priority :  use context
         elif args.proximity == 'second-order':
-            self.context_embedding = tf.get_variable('context_embedding', [args.num_of_nodes, args.embedding_dim], initializer=tf.random_uniform_initializer(minval=-1., maxval=1.))
+            self.context_embedding = tf.get_variable('context_embedding', [args.num_of_nodes, args.dimension], initializer=tf.random_uniform_initializer(minval=-1., maxval=1.))
             self.u_j_embedding = tf.matmul(tf.one_hot(self.u_j, depth=args.num_of_nodes), self.context_embedding)
 
         # Compute u_j^T * u_i

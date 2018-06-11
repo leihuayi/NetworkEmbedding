@@ -104,9 +104,9 @@ def main():
   score = logisticRegr.score(X_test, y_test)
 
   # Output results
-  print ('-------------------')
+  print ('---------------------------------')
   print ('Score :   ', score)
-  print ('-------------------')
+  print ('---------------------------------')
 
 
 

@@ -7,18 +7,17 @@ This project is Homework 3 of Machine Learning course of Tsinghua Univeristy.
 
 ## Requirements
 
+numpy>=1.12.1
+scipy>1.12.1
 argparse>=1.2.1
 futures==3.1.1
 six>=1.7.3
 gensim>=1.0.0
-scipy>=0.15.0
 psutil>=2.1.1
-numpy
 networkx
 tensorflow>=1.3.0
 
 To install the requirements, run ```pip install -r requirements.txt```
-
 
 # Usage
 
@@ -39,25 +38,36 @@ Arguments :
 
 2) LINE
 
-```python line/main.py --input tencent/adj_train.npz --output tencent/tencent.line.embeddings --proximity second-order```
+```python line/main.py --input tencent/adj_train.npz --output tencent/tencent.line.embeddings --proximity second-order --iter 1000```
 
-This program runs in approximately one hour for 1000 batches.
+This program runs in approximately one hour for 1000 iterations (batches).
 
 Arguments :
 * input : network file path (.npz file)
 * output : embedding output path
 * proximity : depth for neighbour analysis (first-order or second-order) (optional)
+* iter : number of iterations (optional)
 
 3) Node2Vec
 
 ```python node2vec/main.py --input cora/cora.mat --output cora/cora.deepwalk.embeddings --number-walks 10 --walk-length 40```
+
 Arguments :
 * input : network file path (.npz file, run cora/data_utils_cora.py to get network.npz matrix)
 * output : embedding output path
 * number-walk : for each node, number of walks starting from this node  (optional)
 * walk-length : size of each walk (number of vertices visited from each node)  (optional)
 
-4)
+4) AANE
+
+This program runs in approximately 30 mins for 10 iterations.
+
+```python aane/main.py --input tencent/adj_train.npz --output tencent/tencent.aane.embeddings --iter 10```
+
+Arguments :
+* input : network file path (.npz file)
+* output : embedding output path
+* iter : number of iterations (optional)
 
 
 ## Evaluation
@@ -69,7 +79,7 @@ Arguments :
 Arguments :
 * emb : embeddings file path
 * net : network file path (.npz file, run cora/data_utils_cora.py to get network.npz matrix)
-* labels : 
+* labels : y sparse matrix (.npz file, run cora/data_utils_cora.py to get labels.npz matrix)
 
 2) Dataset Tencent Weibo
 

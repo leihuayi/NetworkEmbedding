@@ -71,14 +71,14 @@ def deepwalk(args):
 
   if args.model == 'skipgram' :
     vertex_counts = count_words(walks) # dictionary of the times each vertex appear in walks
-    mod = Skipgram(sentences=walks, vocabulary_counts=vertex_counts,size=args.representation_size,window=5, min_count=0, trim_rule=None, workers=1)
+    model = Skipgram(sentences=walks, vocabulary_counts=vertex_counts,size=args.representation_size,window=5, min_count=0, trim_rule=None, workers=1)
   else :
     if args.model == 'word2vec':
-      mod = Word2Vec(walks, size=args.representation_size, window=5, min_count=0, sg=1, hs=1, workers=1)
+      model = Word2Vec(walks, size=args.representation_size, window=5, min_count=0, sg=1, hs=1, workers=1)
     else:
       raise Exception("Unknown model: '%s'.  Valid models: 'word2vec', 'skipgram'" % args.model)
 
-  mod.wv.save_word2vec_format(args.output)
+  model.wv.save_word2vec_format(args.output)
 
 
 #-----------------------------------------------------------------------------------------------#
@@ -93,7 +93,6 @@ def main():
   parser.add_argument('--input', nargs='?', required=True)
   parser.add_argument('--output', required=True)
   parser.add_argument("-l", "--log", dest="log", default="INFO")
-  parser.add_argument('--dic-network-name', default='network')
   parser.add_argument('--number-walks', default=20, type=int)
   parser.add_argument('--walk-length', default=20, type=int)
   parser.add_argument('--representation-size', default=64, type=int, help='Number of latent dimensions to learn for each node.')
