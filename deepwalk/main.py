@@ -6,25 +6,15 @@
 import os
 import sys
 import random
-from io import open
 import argparse
-from collections import Counter, Mapping
-import logging
-
-import graph
-from model import Skipgram
+import time
+from collections import Counter
+from multiprocessing import cpu_count
 from gensim.models import Word2Vec
 from gensim.models.word2vec import Vocab
 
-from six import text_type as unicode
-from six import iteritems
-from six import string_types
-from six.moves import range
-
-
-
-logger = logging.getLogger(__name__)
-LOGFORMAT = "%(asctime).19s %(levelname)s %(filename)s: %(lineno)s %(message)s"
+import graph
+from model import Skipgram
 
 
 #-----------------------------------------------------------------------------------------------#
@@ -39,46 +29,45 @@ def count_words(walks):
     c.update(words)
   return c
 
+
 #-----------------------------------------------------------------------------------------------#
 #                                                                                               #
 #   DEEPWALK                                                                                    #
-#   Deepwalk code                                                                               #
 #                                                                                               #
 #-----------------------------------------------------------------------------------------------#
 def deepwalk(args):
-  G = graph.Graph(graph_file=args.input)
+  start_time = time.time()
 
-  ## Info about the walks
-  print("Number of nodes: {}".format(G.num_of_nodes))
+  # Init graph
+  G = graph.Graph(args.input)
 
-  # We have number_walks walks starting from each node
-  total_walks = G.num_of_nodes * args.number_walks
-
-  print("Total number of walks: {}".format(total_walks))
-
+  # Info about the walks
+  total_walks = G.num_of_nodes * args.num_walks
   data_size = total_walks * args.walk_length
 
-  print("Data size (walks*length): {}".format(data_size))
+  print("\nNumber of nodes: {}".format(G.num_of_nodes))
+  print("Total number of walks: {}".format(total_walks)) # Number of walks starting from each node
+  print("Data size (walks*length): {}\n".format(data_size))
 
-  ## Create the random walks and store them in walks list
-  print("Walking...")
-  walks = graph.build_deepwalk_corpus(G, num_paths=args.number_walks, path_length=args.walk_length, alpha=0)
+  # Create the random walks and store them in walks list
+  print("Generate walks ...")
+  walks = G.build_deep_walks(num_paths=args.num_walks, path_length=args.walk_length)
 
-  ## Apply model to each walk = sentence
-  # https://www.quora.com/Can-some-one-help-explain-DeepWalk-Online-Learning-of-Social-Representations-in-laymans-terms-and-provide-a-real-world-example-with-a-social-graph
-  print("Training...")
-
-
+  # Apply model to each walk = sentence
+  print("Applying %s on walks ..."% args.model)
   if args.model == 'skipgram' :
     vertex_counts = count_words(walks) # dictionary of the times each vertex appear in walks
-    model = Skipgram(sentences=walks, vocabulary_counts=vertex_counts,size=args.representation_size,window=5, min_count=0, trim_rule=None, workers=1)
+    model = Skipgram(sentences=walks, vocabulary_counts=vertex_counts,size=args.dim,window=5, min_count=0, trim_rule=None, workers=cpu_count(), iter=args.iter)
   else :
     if args.model == 'word2vec':
-      model = Word2Vec(walks, size=args.representation_size, window=5, min_count=0, sg=1, hs=1, workers=1)
+      model = Word2Vec(walks, size=args.dim, window=5, min_count=0, sg=1, hs=1, workers=cpu_count())
     else:
       raise Exception("Unknown model: '%s'.  Valid models: 'word2vec', 'skipgram'" % args.model)
 
+  # Save to output file
+  print("----- Total time {:.2f}s -----".format(time.time() - start_time))
   model.wv.save_word2vec_format(args.output)
+  return
 
 
 #-----------------------------------------------------------------------------------------------#
@@ -92,10 +81,10 @@ def main():
   parser.add_argument('--format', default='mat')
   parser.add_argument('--input', nargs='?', required=True)
   parser.add_argument('--output', required=True)
-  parser.add_argument("-l", "--log", dest="log", default="INFO")
-  parser.add_argument('--number-walks', default=20, type=int)
+  parser.add_argument('--num-walks', default=20, type=int)
   parser.add_argument('--walk-length', default=20, type=int)
-  parser.add_argument('--representation-size', default=64, type=int, help='Number of latent dimensions to learn for each node.')
+  parser.add_argument('--dim', type=int, default=128, help='Embeddings dimension')
+  parser.add_argument('--iter', default=1, type=int, help='Number of epochs in SGD')
   parser.add_argument('--model', default='word2vec')
 
   args = parser.parse_args()

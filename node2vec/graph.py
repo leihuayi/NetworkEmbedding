@@ -1,19 +1,28 @@
+#-----------------------------------------------------------------------------------------------#
+#                                                                                               #
+#   I M P O R T     L I B R A R I E S                                                           #
+#                                                                                               #
+#-----------------------------------------------------------------------------------------------# 
 import numpy as np
+import scipy.sparse as sp
 import networkx as nx
 import random
 
-
+#-----------------------------------------------------------------------------------------------#
+#                                                                                               #
+#   GRAPH UTILITY                                                                               #
+#                                                                                               #
+#-----------------------------------------------------------------------------------------------# 
 class Graph():
-	def __init__(self, nx_G, is_directed, p, q):
-		self.G = nx_G
-		self.is_directed = is_directed
+	def __init__(self, graph_file, p, q):
+		g_npz = sp.load_npz(graph_file)
+		self.G = nx.from_scipy_sparse_matrix(g_npz)
+		self.is_directed = False
 		self.p = p
 		self.q = q
 
+	# Returns a truncated random walk
 	def node2vec_walk(self, walk_length, start_node):
-		'''
-		Simulate a random walk starting from start node.
-		'''
 		G = self.G
 		alias_nodes = self.alias_nodes
 		alias_edges = self.alias_edges
@@ -36,10 +45,9 @@ class Graph():
 
 		return walk
 
-	def simulate_walks(self, num_walks, walk_length):
-		'''
-		Repeatedly simulate random walks from each node.
-		'''
+
+	#   Creates list of random walks
+	def build_node2vec_walks(self, num_walks, walk_length):
 		G = self.G
 		walks = []
 		nodes = list(G.nodes())
@@ -48,14 +56,13 @@ class Graph():
 			print(str(walk_iter+1), '/', str(num_walks))
 			random.shuffle(nodes)
 			for node in nodes:
-				walks.append(self.node2vec_walk(walk_length=walk_length, start_node=node))
+				walks.append(self.node2vec_walk(walk_length=walk_length, start_node=node)) # Start walk from random node
 
 		return walks
 
+
+	# Get the alias edge setup lists for a given edge.
 	def get_alias_edge(self, src, dst):
-		'''
-		Get the alias edge setup lists for a given edge.
-		'''
 		G = self.G
 		p = self.p
 		q = self.q
@@ -73,10 +80,8 @@ class Graph():
 
 		return alias_setup(normalized_probs)
 
+	# Preprocessing of transition probabilities for guiding the random walks.
 	def preprocess_transition_probs(self):
-		'''
-		Preprocessing of transition probabilities for guiding the random walks.
-		'''
 		G = self.G
 		is_directed = self.is_directed
 
@@ -103,13 +108,8 @@ class Graph():
 
 		return
 
-
+# Compute utility lists for non-uniform sampling from discrete distributions.
 def alias_setup(probs):
-	'''
-	Compute utility lists for non-uniform sampling from discrete distributions.
-	Refer to https://hips.seas.harvard.edu/blog/2013/03/03/the-alias-method-efficient-sampling-with-many-discrete-outcomes/
-	for details
-	'''
 	K = len(probs)
 	q = np.zeros(K)
 	J = np.zeros(K, dtype=np.int)
@@ -136,10 +136,8 @@ def alias_setup(probs):
 
 	return J, q
 
+# Draw sample from a non-uniform discrete distribution using alias sampling.
 def alias_draw(J, q):
-	'''
-	Draw sample from a non-uniform discrete distribution using alias sampling.
-	'''
 	K = len(J)
 
 	kk = int(np.floor(np.random.rand()*K))

@@ -105,7 +105,7 @@ def main():
 
   # Output results
   print ('---------------------------------')
-  print ('Score :   ', score)
+  print ('Accuracy Score :   ', score)
   print ('---------------------------------')
 
 

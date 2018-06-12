@@ -1,11 +1,17 @@
+#-----------------------------------------------------------------------------------------------#
+#                                                                                               #
+#   I M P O R T     L I B R A R I E S                                                           #
+#                                                                                               #
+#-----------------------------------------------------------------------------------------------# 
 import numpy as np
 import scipy.sparse as sp
 import scipy.io as sio
 import networkx as nx
-from AANE import AANE
 import pickle
 import time
 import argparse
+
+from model import AANE
 
 #-----------------------------------------------------------------------------------------------#
 #                                                                                               #
@@ -13,19 +19,14 @@ import argparse
 #                                                                                               #
 #-----------------------------------------------------------------------------------------------#
 def aane(args):
-	
-	A = sp.load_npz(args.input)
-	G = sp.csc_matrix(A)
+	start_time = time.time()
 
-	"""
-	mat_contents = sio.loadmat(args.input)
-	G = mat_contents["Network"]
-	A = mat_contents["Attributes"]
-	Label = mat_contents["Label"]
-	del mat_contents
-	"""
+	# Init graph
+	g_npz = sp.load_npz(args.input)
+	G = sp.csc_matrix(g_npz) # column slicing is operated on csc matrices
 	
 	n = G.shape[0]
+	print("Number of nodes: {}".format(n))
 
 	indexList = np.random.randint(25, size=n)  # 5-fold cross-validation indices
 
@@ -35,15 +36,16 @@ def aane(args):
 	[Group2.append(x) for x in range(0, n) if indexList[x] >= 21]  # test group
 	n1 = len(Group1)  # num of nodes in training group
 	n2 = len(Group2)  # num of nodes in test group
-	CombG = G[Group1+Group2, :][:, Group1+Group2]
+	Graph = G[Group1+Group2, :][:, Group1+Group2]
 
+	# Launch AANE
+	print("Initialization ...\n")
+	H_Net = AANE(Graph, Graph, args).run()
 
-	start_time = time.time()
-	print("AANE for a network with only weight attribute :")
-	H_Net = AANE(CombG, CombG, args).function()
-	print("time elapsed: {:.2f}s".format(time.time() - start_time))
+	# Save to output file
+	print("----- Total time {:.2f}s -----".format(time.time() - start_time))
 	pickle.dump(H_Net, open(args.output, 'wb'))
-
+	return
 
 #-----------------------------------------------------------------------------------------------#
 #                                                                                               #
