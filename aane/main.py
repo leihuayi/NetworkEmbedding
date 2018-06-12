@@ -5,7 +5,6 @@
 #-----------------------------------------------------------------------------------------------# 
 import numpy as np
 import scipy.sparse as sp
-import scipy.io as sio
 import networkx as nx
 import pickle
 import time
@@ -26,7 +25,7 @@ def aane(args):
 	G = sp.csc_matrix(g_npz) # column slicing is operated on csc matrices
 	
 	n = G.shape[0]
-	print("Number of nodes: {}".format(n))
+	print("\nNumber of nodes: {}".format(n))
 
 	indexList = np.random.randint(25, size=n)  # 5-fold cross-validation indices
 
@@ -36,11 +35,11 @@ def aane(args):
 	[Group2.append(x) for x in range(0, n) if indexList[x] >= 21]  # test group
 	n1 = len(Group1)  # num of nodes in training group
 	n2 = len(Group2)  # num of nodes in test group
-	Graph = G[Group1+Group2, :][:, Group1+Group2]
+	G_matrix = G[Group1+Group2, :][:, Group1+Group2]
 
 	# Launch AANE
-	print("Initialization ...\n")
-	H_Net = AANE(Graph, Graph, args).run()
+	print("\nInitialization ...")
+	H_Net = AANE(G_matrix, G_matrix, args).run()
 
 	# Save to output file
 	print("----- Total time {:.2f}s -----".format(time.time() - start_time))
@@ -57,7 +56,7 @@ def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('--input', nargs='?', required=True)
   parser.add_argument('--output', required=True)
-  parser.add_argument('--iter', default=1)
+  parser.add_argument('--iter', default=5)
   parser.add_argument('--dimension', default=128)
   parser.add_argument('--lambd', default=0.05)
   parser.add_argument('--rho', default=5)

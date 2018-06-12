@@ -18,8 +18,15 @@ import time
 #                                                                                               #
 #-----------------------------------------------------------------------------------------------#
 def line(args):
+    start_time = time.time()
+
+    # Init graph
     graph = Graph(graph_file=args.input)
+
     args.num_of_nodes = graph.num_of_nodes
+    args.iter = int(args.iter)
+    print("\nNumber of nodes: {}".format(graph.num_of_nodes))
+
     model = Line(args)
     with tf.Session() as sess:
         print(args)
@@ -27,28 +34,36 @@ def line(args):
         initial_embedding = sess.run(model.embedding)
         learning_rate = args.learning_rate
         sampling_time, training_time = 0, 0
-        for b in range(int(args.iter)):
+
+        print('Tensorflow iterations :')
+        for i in range(args.iter):
             t1 = time.time()
             u_i, u_j, label = graph.fetch_batch(batch_size=args.batch_size, K=args.K)
             feed_dict = {model.u_i: u_i, model.u_j: u_j, model.label: label, model.learning_rate: learning_rate}
             t2 = time.time()
             sampling_time += t2 - t1
-            if b % 100 != 0:
+
+            if i % 100 != 0:
                 sess.run(model.train_op, feed_dict=feed_dict)
                 training_time += time.time() - t2
                 if learning_rate > args.learning_rate * 0.0001:
-                    learning_rate = args.learning_rate * (1 - b / args.iter)
+                    learning_rate = args.learning_rate * (1 - i / args.iter)
                 else:
                     learning_rate = args.learning_rate * 0.0001
             else:
                 loss = sess.run(model.loss, feed_dict=feed_dict)
-                print('batches : %d\t loss : %f\t sampling_time : %0.2f\t training_time : %0.2f\t datetime : %s' % 
-                    (b, loss, sampling_time, training_time,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+                print('Iteration : %d/%d\t loss : %f\t sampling_time : %0.2f\t training_time : %0.2f\t' % (i,args.iter, loss, sampling_time, training_time))
                 sampling_time, training_time = 0, 0
-            if b % 1000 == 0 or b == (args.iter - 1):
+
+            if i == (args.iter - 1):
                 embedding = sess.run(model.embedding)
                 normalized_embedding = embedding / np.linalg.norm(embedding, axis=1, keepdims=True)
+                
+                # Save to output file
+                print("----- Total time {:.2f}s -----".format(time.time() - start_time))
                 pickle.dump(graph.embedding_mapping(normalized_embedding), open(args.output, 'wb'))
+
+    return
 
 
 #-----------------------------------------------------------------------------------------------#

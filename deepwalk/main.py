@@ -60,7 +60,7 @@ def deepwalk(args):
     model = Skipgram(sentences=walks, vocabulary_counts=vertex_counts,size=args.dim,window=5, min_count=0, trim_rule=None, workers=cpu_count(), iter=args.iter)
   else :
     if args.model == 'word2vec':
-      model = Word2Vec(walks, size=args.dim, window=5, min_count=0, sg=1, hs=1, workers=cpu_count())
+      model = Word2Vec(walks, size=args.dimension, window=5, min_count=0, sg=1, hs=1, workers=cpu_count())
     else:
       raise Exception("Unknown model: '%s'.  Valid models: 'word2vec', 'skipgram'" % args.model)
 
@@ -83,9 +83,9 @@ def main():
   parser.add_argument('--output', required=True)
   parser.add_argument('--num-walks', default=20, type=int)
   parser.add_argument('--walk-length', default=20, type=int)
-  parser.add_argument('--dim', type=int, default=128, help='Embeddings dimension')
+  parser.add_argument('--dimension', type=int, default=128, help='Embeddings dimension')
   parser.add_argument('--iter', default=1, type=int, help='Number of epochs in SGD')
-  parser.add_argument('--model', default='word2vec')
+  parser.add_argument('--model', default='word2vec', help='Type of model to apply on walks (word2vec/skipgram)')
 
   args = parser.parse_args()
 

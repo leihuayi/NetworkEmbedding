@@ -36,7 +36,7 @@ def node2vec(args):
 
 	# Feed to walks to Word2Vec model
 	walks = [list(map(str, walk)) for walk in walks]
-	model = Word2Vec(walks, size=args.dim, window=5, min_count=0, sg=1, workers=cpu_count(), iter=args.iter)
+	model = Word2Vec(walks, size=args.dimension, window=5, min_count=0, sg=1, workers=cpu_count(), iter=args.iter)
 
   	# Save to output file
 	print("----- Total time {:.2f}s -----".format(time.time() - start_time))
@@ -55,7 +55,7 @@ def main():
 	parser.add_argument('--output', nargs='?', required=True)
 	parser.add_argument('--walk-length', type=int, default=40)
 	parser.add_argument('--num-walks', type=int, default=10)
-	parser.add_argument('--dim', type=int, default=128, help='Embeddings dimension')
+	parser.add_argument('--dimension', type=int, default=128, help='Embeddings dimension')
 	parser.add_argument('--iter', default=1, type=int, help='Number of epochs in SGD')
 	parser.add_argument('--p', type=float, default=1, help='Return hyperparameter')
 	parser.add_argument('--q', type=float, default=1, help='Input hyperparameter')

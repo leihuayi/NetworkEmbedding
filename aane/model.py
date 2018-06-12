@@ -16,25 +16,25 @@ from math import ceil
 #                                                                                               #
 #-----------------------------------------------------------------------------------------------# 
 class AANE:
-    def __init__(self, Graph, Attri, args):
+    def __init__(self, G_mat, Attri, args):
 
         [self.num_of_nodes, m] = Attri.shape  # num_of_nodes = Total num of nodes, m = attribute category num
 
-        Graph = sparse.lil_matrix(Graph)
-        Graph.setdiag(np.zeros(self.num_of_nodes))
-        Graph = csc_matrix(Graph)
+        Gmat = sparse.lil_matrix(G_mat)
+        Gmat.setdiag(np.zeros(self.num_of_nodes))
+        Gmat = csc_matrix(Gmat)
         Attri = csc_matrix(Attri)
 
         self.maxiter = int(args.iter)  # Max num of iteration
         self.lambd = float(args.lambd)  # Initial regularization parameter
         self.rho = float(args.rho)  # Initial penalty parameter
-        self.dim = int(args.dimension) # Embedding dimension
+        self.dim = int(args.dim) # Embedding dimension
         splitnum = 1  # number of pieces we split the SA for limited cache
 
-        sumcol = Graph.sum(0)
+        sumcol = Gmat.sum(0)
 
         # Initialize H and Z
-        self.H = svds(Graph[:, sorted(range(self.num_of_nodes), key=lambda k: sumcol[0, k], reverse=True)[0:min(10 * self.dim, self.num_of_nodes)]], self.dim)[0]
+        self.H = svds(Gmat[:, sorted(range(self.num_of_nodes), key=lambda k: sumcol[0, k], reverse=True)[0:min(10 * self.dim, self.num_of_nodes)]], self.dim)[0]
         self.Z = self.H.copy()
 
         # Use blocks for big matrices operations
@@ -45,8 +45,8 @@ class AANE:
         
         self.affi = -1  # Index for affinity matrix sa
         self.U = np.zeros((self.num_of_nodes, self.dim))
-        self.nexidx = np.split(Graph.indices, Graph.indptr[1:-1])
-        self.Graph = np.split(Graph.data, Graph.indptr[1:-1])
+        self.nexidx = np.split(Gmat.indices, Gmat.indptr[1:-1])
+        self.Gmat = np.split(Gmat.data, Gmat.indptr[1:-1])
 
 
     # Update matrix embedding representation H
@@ -68,7 +68,7 @@ class AANE:
                     nzidx = normi_j != 0  # Non-equal Index
 
                     if np.any(nzidx):
-                        normi_j = (self.lambd * self.Graph[i][nzidx]) / normi_j[nzidx]
+                        normi_j = (self.lambd * self.Gmat[i][nzidx]) / normi_j[nzidx]
                         self.H[i, :] = np.linalg.solve(xtx + normi_j.sum() * np.eye(self.dim), sums[i - indexblock, :] + 
                             (neighbor[nzidx, :] * normi_j.reshape((-1, 1))).sum(0) + self.rho * (self.Z[i, :] - self.U[i, :]))
                     else:
@@ -95,7 +95,7 @@ class AANE:
                     nzidx = normi_j != 0  # Non-equal Index
 
                     if np.any(nzidx):
-                        normi_j = (self.lambd * self.Graph[i][nzidx]) / normi_j[nzidx]
+                        normi_j = (self.lambd * self.Gmat[i][nzidx]) / normi_j[nzidx]
                         self.Z[i, :] = np.linalg.solve(xtx + normi_j.sum() * np.eye(self.dim), sums[i - indexblock, :] + 
                             (neighbor[nzidx, :] * normi_j.reshape((-1, 1))).sum(0) + self.rho * (self.H[i, :] + self.U[i, :]))
                     else:
@@ -108,9 +108,9 @@ class AANE:
 
     # Run algorithm
     def run(self):
-        print("AANE Iteration :")
         self.updateH()
 
+        print("AANE Iteration :")
         for i in range(self.maxiter):
             print("%s/%s"%(i+1, self.maxiter))
             self.updateZ()

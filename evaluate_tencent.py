@@ -74,9 +74,9 @@ def main():
   roc_score = roc_auc_score(labels_all, preds_all)
   
   # return roc_score, roc_curve_tuple, ap_score
-  print ('--------------------------------------------')
-  print ('AUC ROC Score :   ', roc_score)
-  print ('--------------------------------------------')
+  print ('--------------------------------')
+  print ('AUC ROC Score :   ', round(roc_score,3))
+  print ('--------------------------------')
 
 
 

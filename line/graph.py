@@ -7,7 +7,11 @@ import networkx as nx
 import numpy as np
 import scipy.sparse as sp
 
-
+#-----------------------------------------------------------------------------------------------#
+#                                                                                               #
+#   GRAPH UTILITY                                                                               #
+#                                                                                               #
+#-----------------------------------------------------------------------------------------------# 
 class Graph:
     def __init__(self, graph_file):
         g_npz = sp.load_npz(graph_file)
@@ -31,6 +35,7 @@ class Graph:
             self.node_index[node] = index
             self.node_index_reversed[index] = node
         self.edges = [(self.node_index[u], self.node_index[v]) for u, v, _ in self.edges_raw]
+
 
     def fetch_batch(self, batch_size=16, K=10, edge_sampling='atlas', node_sampling='atlas'):
         if edge_sampling == 'numpy':
@@ -65,12 +70,19 @@ class Graph:
                 label.append(-1)
         return u_i, u_j, label
 
+
+    # Return dictionary of nodes and their embeddings 
     def embedding_mapping(self, embedding):
         return {node: embedding[self.node_index[node]] for node, _ in self.nodes_raw}
 
 
+#-----------------------------------------------------------------------------------------------#
+#                                                                                               #
+#    ALIASSAMPLING                                                                              #
+#    Helper function for performing node and edge sampling                                      #
+#                                                                                               #
+#-----------------------------------------------------------------------------------------------#
 class AliasSampling:
-    # Reference: https://en.wikipedia.org/wiki/Alias_method
     def __init__(self, prob):
         self.n = len(prob)
         self.U = np.array(prob) * self.n
