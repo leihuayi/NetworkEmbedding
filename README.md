@@ -36,7 +36,7 @@ Arguments :
 
 ```python line/main.py --input tencent/adj_train.npz --output tencent/tencent.line.embeddings --iter 500 --proximity second-order```
 
-This program runs in approximately one hour for 1000 iterations (batches). [paper] (https://arxiv.org/pdf/1503.03578.pdf)
+This program runs in approximately 35mins for 500 iterations (batches). [paper] (https://arxiv.org/pdf/1503.03578.pdf)
 
 Arguments :
 * input : network file path (.npz file)
@@ -48,7 +48,7 @@ Arguments :
 
 ```python node2vec/main.py --input cora/network.npz --output cora/cora.node2vec.embeddings --num-walks 10 --walk-length 40```
 
-This program runs in approximately 13s for 10 walks of length 40. [paper] (http://www.kdd.org/kdd2016/papers/files/rfp0218-groverA.pdf)
+This program runs in approximately 15s for 10 walks of length 40. [paper] (http://www.kdd.org/kdd2016/papers/files/rfp0218-groverA.pdf)
 
 Arguments :
 * input : network file path (.npz file, run cora/data_utils_cora.py to get network.npz matrix)

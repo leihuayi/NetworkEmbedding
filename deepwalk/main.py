@@ -57,7 +57,7 @@ def deepwalk(args):
   print("Applying %s on walks ..."% args.model)
   if args.model == 'skipgram' :
     vertex_counts = count_words(walks) # dictionary of the times each vertex appear in walks
-    model = Skipgram(sentences=walks, vocabulary_counts=vertex_counts,size=args.dim,window=5, min_count=0, trim_rule=None, workers=cpu_count(), iter=args.iter)
+    model = Skipgram(sentences=walks, vocabulary_counts=vertex_counts,size=args.dimension,window=5, min_count=0, trim_rule=None, workers=cpu_count(), iter=args.iter)
   else :
     if args.model == 'word2vec':
       model = Word2Vec(walks, size=args.dimension, window=5, min_count=0, sg=1, hs=1, workers=cpu_count())

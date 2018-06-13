@@ -46,6 +46,7 @@ def line(args):
             if i % 100 != 0:
                 sess.run(model.train_op, feed_dict=feed_dict)
                 training_time += time.time() - t2
+                print('%d/%d' % (i,args.iter))
                 if learning_rate > args.learning_rate * 0.0001:
                     learning_rate = args.learning_rate * (1 - i / args.iter)
                 else:

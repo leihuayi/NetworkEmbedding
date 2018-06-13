@@ -28,7 +28,7 @@ class AANE:
         self.maxiter = int(args.iter)  # Max num of iteration
         self.lambd = float(args.lambd)  # Initial regularization parameter
         self.rho = float(args.rho)  # Initial penalty parameter
-        self.dim = int(args.dim) # Embedding dimension
+        self.dim = int(args.dimension) # Embedding dimension
         splitnum = 1  # number of pieces we split the SA for limited cache
 
         sumcol = Gmat.sum(0)
