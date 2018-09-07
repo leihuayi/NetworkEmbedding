@@ -1,9 +1,7 @@
-Sarah Gross, student 2017280160
-
 
 # Presentation
 
-This project is Homework 3 of Machine Learning course of Tsinghua Univeristy.
+This project was done for Machine Learning course of Tsinghua Univeristy.
 
 ## Requirements
 
