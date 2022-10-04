@@ -1,7 +1,10 @@
 
 # Presentation
 
-This project was done for Machine Learning course of Tsinghua Univeristy.
+There are many interesting Machine Learning tasks which can be applied to networks : prevision of traffic, network security, social media trends... But
+usually, a network always contains massive nodes, edges and additional complex information which leads to high complexity in computing. **Network embedding aims at transforming one network into a low dimensional vector** space which can more easily be fed to a neural network.
+
+This project implements 4 classic network embedding algorithms and evaluate their performances on 2 datasets. It was done for Machine Learning course of Tsinghua Univeristy.
 
 ## Requirements
 
@@ -21,7 +24,7 @@ To install the requirements, run ```pip install -r requirements.txt```
 
 ```python deepwalk/main.py --input cora/network.npz --output cora/cora.deepwalk.embeddings --num-walks 10 --walk-length 40 --model skipgram```
 
-This program runs in approximately 15s for 10 walks of length 40. [paper] (https://arxiv.org/pdf/1403.6652)
+This program runs in approximately 15s for 10 walks of length 40. [paper](https://arxiv.org/pdf/1403.6652)
 
 Arguments :
 * input : network file path (.npz file, run cora/data_utils_cora.py to get network.npz matrix)
@@ -34,7 +37,7 @@ Arguments :
 
 ```python line/main.py --input tencent/adj_train.npz --output tencent/tencent.line.embeddings --iter 500 --proximity second-order```
 
-This program runs in approximately 35mins for 500 iterations (batches). [paper] (https://arxiv.org/pdf/1503.03578.pdf)
+This program runs in approximately 35mins for 500 iterations (batches). [paper](https://arxiv.org/pdf/1503.03578.pdf)
 
 Arguments :
 * input : network file path (.npz file)
@@ -46,7 +49,7 @@ Arguments :
 
 ```python node2vec/main.py --input cora/network.npz --output cora/cora.node2vec.embeddings --num-walks 10 --walk-length 40```
 
-This program runs in approximately 15s for 10 walks of length 40. [paper] (http://www.kdd.org/kdd2016/papers/files/rfp0218-groverA.pdf)
+This program runs in approximately 15s for 10 walks of length 40. [paper](http://www.kdd.org/kdd2016/papers/files/rfp0218-groverA.pdf)
 
 Arguments :
 * input : network file path (.npz file, run cora/data_utils_cora.py to get network.npz matrix)
@@ -58,7 +61,7 @@ Arguments :
 
 ```python aane/main.py --input tencent/adj_train.npz --output tencent/tencent.aane.embeddings --iter 10```
 
-This program runs in approximately 25 mins for 10 iterations. [paper] (http://www.public.asu.edu/~jundongl/paper/SDM17_AANE.pdf)
+This program runs in approximately 25 mins for 10 iterations. [paper](http://www.public.asu.edu/~jundongl/paper/SDM17_AANE.pdf)
 
 Arguments :
 * input : network file path (.npz file)
